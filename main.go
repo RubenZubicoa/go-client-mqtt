@@ -4,10 +4,26 @@ import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
     "time"
+    "os"
 )
 
+func writeFile(text string){
+    f, err := os.OpenFile("file.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+    if err != nil {
+        panic(err)
+    }
+
+    defer f.Close()
+
+    if _, err = f.WriteString(text); err != nil {
+        panic(err)
+    }
+}
+
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-    fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
+    message := "Received message: "+ string(msg.Payload()) +" from topic: "+ string(msg.Topic())+"\n"
+    fmt.Printf(message)
+    writeFile(message)
 }
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client){
 	fmt.Println("Connected")
@@ -23,20 +39,8 @@ func sub(client mqtt.Client, topic string) {
     fmt.Printf("Subscribed to topic %s\n", topic)
 }
 
-// func publish(client mqtt.Client) {
-//     num := 10
-//     for i := 0; i < num; i++ {
-//         text := fmt.Sprintf("Message %d", i)
-//         token := client.Publish("topic/test", 0, false, text)
-//         token.Wait()
-//         time.Sleep(time.Second)
-//     }
-// }
-
-func wait(num int){
-    for i:=0; i < num; i++{
-        time.Sleep(time.Second)
-    }
+func wait(){
+    time.Sleep(20 * time.Second)
 }
 
 func main(){
@@ -55,9 +59,9 @@ func main(){
         panic(token.Error())
   }
   topic := "topic/test"
-  go sub(client, topic)
+  sub(client, topic)
   topic2 := "topic/prueba"
-  go sub(client, topic2)
-  wait(20)
+  sub(client, topic2)
+  wait()
   client.Disconnect(250)
 }
