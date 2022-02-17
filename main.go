@@ -17,19 +17,24 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 	fmt.Printf("Connect lost: %v", err)
 }
 
-func sub(client mqtt.Client) {
-    topic := "topic/test"
+func sub(client mqtt.Client, topic string) {
     token := client.Subscribe(topic, 1, nil)
     token.Wait()
-    fmt.Printf("Subscribed to topic %s", topic)
+    fmt.Printf("Subscribed to topic %s\n", topic)
 }
 
-func publish(client mqtt.Client) {
-    num := 10
-    for i := 0; i < num; i++ {
-        text := fmt.Sprintf("Message %d", i)
-        token := client.Publish("topic/test", 0, false, text)
-        token.Wait()
+// func publish(client mqtt.Client) {
+//     num := 10
+//     for i := 0; i < num; i++ {
+//         text := fmt.Sprintf("Message %d", i)
+//         token := client.Publish("topic/test", 0, false, text)
+//         token.Wait()
+//         time.Sleep(time.Second)
+//     }
+// }
+
+func wait(num int){
+    for i:=0; i < num; i++{
         time.Sleep(time.Second)
     }
 }
@@ -49,7 +54,10 @@ func main(){
     if token := client.Connect(); token.Wait() && token.Error() != nil {
         panic(token.Error())
   }
-  sub(client)
-  publish(client)
+  topic := "topic/test"
+  go sub(client, topic)
+  topic2 := "topic/prueba"
+  go sub(client, topic2)
+  wait(20)
   client.Disconnect(250)
 }
