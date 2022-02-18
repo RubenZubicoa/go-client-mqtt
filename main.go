@@ -43,10 +43,20 @@ func wait(){
     time.Sleep(20 * time.Second)
 }
 
+func publish(client mqtt.Client) {
+    num := 10
+    for i := 0; i < num; i++ {
+        text := fmt.Sprintf("Message %d", i)
+        token := client.Publish("topic/test", 0, false, text)
+        token.Wait()
+        time.Sleep(time.Second)
+    }
+}
+
 func main(){
-	var broker = "127.0.0.1"
-	var port = 1883
-	opts := mqtt.NewClientOptions()
+    var broker = "127.0.0.1"
+    var port = 1883
+    opts := mqtt.NewClientOptions()
     opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
     opts.SetClientID("go_mqtt_client")
     opts.SetUsername("emqx")
@@ -57,11 +67,10 @@ func main(){
     client := mqtt.NewClient(opts)
     if token := client.Connect(); token.Wait() && token.Error() != nil {
         panic(token.Error())
-  }
-  topic := "topic/test"
-  sub(client, topic)
-  topic2 := "topic/prueba"
-  sub(client, topic2)
-  wait()
-  client.Disconnect(250)
+    }
+    topic := "topic/test"
+    go sub(client, topic)
+    // go publish(client)
+    wait()
+    client.Disconnect(250)
 }
